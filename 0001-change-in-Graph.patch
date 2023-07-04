@@ -1,0 +1,81 @@
+From 26e483add6d725065f47d753f3a095dcf24b2037 Mon Sep 17 00:00:00 2001
+From: kubra <kubracetin.ist@gmail.com>
+Date: Mon, 3 Jul 2023 15:16:18 -0400
+Subject: [PATCH] change in Graph
+
+---
+ src/App.tsx   | 11 ++++++++++-
+ src/Graph.tsx | 16 +++++++++++++---
+ 2 files changed, 23 insertions(+), 4 deletions(-)
+
+diff --git a/src/App.tsx b/src/App.tsx
+index 8275a0b..0a19dbc 100755
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -41,12 +41,21 @@ class App extends Component<{}, IState> {
+    */
+   getDataFromServer() {
+     let x =0;
++    const interval = setInterval(() => {
+     DataStreamer.getData((serverResponds: ServerRespond[]) => {
+       // Update the state by creating a new array of data that consists of
+       // Previous data in the state and the new data from server
+-      this.setState({ data: [...this.state.data, ...serverResponds] });
++      this.setState({ 
++      data: serverResponds,
++      showGraph : true, 
+     });
++  })
++  x++;
++  if(x >1000) {
++    clearInterval(interval);
+   }
++  }, 100)
++}
+ 
+   /**
+    * Render the App react component
+diff --git a/src/Graph.tsx b/src/Graph.tsx
+index 3b2a7da..cd288a0 100644
+--- a/src/Graph.tsx
++++ b/src/Graph.tsx
+@@ -14,7 +14,7 @@ interface IProps {
+  * Perspective library adds load to HTMLElement prototype.
+  * This interface acts as a wrapper for Typescript compiler.
+  */
+-interface PerspectiveViewerElement {
++interface PerspectiveViewerElement extends HTMLElement{
+   load: (table: Table) => void,
+ }
+ 
+@@ -32,8 +32,8 @@ class Graph extends Component<IProps, {}> {
+ 
+   componentDidMount() {
+     // Get element to attach the table from the DOM.
+-    const elem: PerspectiveViewerElement = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
+-
++    const elem = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
++    
+     const schema = {
+       stock: 'string',
+       top_ask_price: 'float',
+@@ -49,6 +49,16 @@ class Graph extends Component<IProps, {}> {
+ 
+       // Add more Perspective configurations here.
+       elem.load(this.table);
++      elem.setAttribute('view', 'y_line');
++      elem.setAttribute('column-pivots', '["stock"]')
++      elem.setAttribute('row-pivots', '["timestamp"]')
++      elem.setAttribute('columns', '["top_ask_price"]')
++      elem.setAttribute('aggregates', `{
++        "stock" : "distinct count",
++        "top_ask_price" : "avg",
++        "top_bid_price" : "avg",
++        "timestamp" :"distinct count"
++      }`);
+     }
+   }
+ 
+-- 
+2.33.0
+
